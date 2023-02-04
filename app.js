@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const path = require("path");
 
 const {mongoConnect} = require("./util/mongodb");
+const User = require("./models/user"); 
 
 const errorController = require("./controllers/error");
 
@@ -22,6 +23,15 @@ app.set("views", "views");
 app.use(bodyParser.urlencoded({ extended: false }));
 //used for css files to be static and get them with a link
 app.use(express.static(path.join(__dirname, "public")));
+
+app.use((req, res, next) => {
+    User.findById("63dd7d05ed8e39df44cc1364").then((user) => {
+        req.user = new User("63dd7d05ed8e39df44cc1364", user.username, user.email, user.cartId);
+        next();
+    }).catch((err) => {
+        console.log("at use user: " + err)
+    });
+});
 
 app.use("/admin", adminRoutes);
 
