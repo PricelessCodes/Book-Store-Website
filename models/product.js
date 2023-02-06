@@ -1,103 +1,53 @@
-const { getDb, ObjectId } = require("../util/mongodb");
+const mongoose = require("mongoose");
 
-module.exports = class Product {
-    constructor(id, title, imageUrl, description, price, userId) {
-        this._id = new ObjectId(id);
-        this.title = title;
-        this.imageUrl = imageUrl;
-        this.description = description;
-        this.price = price;
-        this.userId = userId;
-    }
+const Schema = mongoose.Schema;
+//Schema used to define how ur data look like
+const productSchema = new Schema({
+    title: {
+        type: String,
+        required: true,
+    },
+    price: {
+        type: Number,
+        required: true,
+    },
+    description: {
+        type: String,
+        required: true,
+    },
+    imageUrl: {
+        type: String,
+        required: true,
+    },
+});
 
-    save() {
-        const db = getDb();
-        return db
-            .collection("products")
-            .insertOne(this)
-            .then((result) => {
-                console.log(result + " in save");
-            })
-            .catch((err) => {
-                console.log(err);
-            });
-    }
+const fullProductSchema = new Schema({
+    userId: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+    },
+    quantity: {
+        type: Number,
+        required: true,
+    },
+});
 
-    Update() {
-        //return db.execute("UPDATE products SET title = ?, price = ?, image = ?, description = ? where products.id = ?", [this.title, this.price, this.imageUrl, this.description, this.id]);
-        const db = getDb();
-        return db
-            .collection("products")
-            .updateOne({ _id: this._id }, { $set: this })
-            .then((result) => {
-                console.log(result + " in update");
-            })
-            .catch((err) => {
-                console.log(err);
-            });
-    }
+productSchema.set("toObject", {
+    transform: function (doc, ret, options) {
+        delete ret.userId;
+        delete ret.quantity;
+    },
+});
 
-    static fetchAll() {
-        //getProductsFromFile(cb);
-        const db = getDb();
-        return db
-            .collection("products")
-            .find()
-            .toArray()
-            .then((products) => {
-                //console.log(products);
-                return products;
-            })
-            .catch((err) => {
-                console.log("at fetchAll " + err);
-            });
-    }
+productSchema.set("toJSON", {
+    transform: function (doc, ret, options) {
+        delete ret.userId;
+        delete ret.quantity;
+    },
+});
 
-    static findById(id) {
-        //console.log("findById " + id);
-        //return db.execute("SELECT * FROM products where products.id = ?", [id]);
-        const db = getDb();
-        return db
-            .collection("products")
-            .findOne({ _id: new ObjectId(id) })
-            .then((product) => {
-                console.log("findById " + product);
-                return product;
-            })
-            .catch((err) => {
-                console.log("at findById " + err);
-            });
-    }
+const Product = mongoose.model("Product", productSchema);
+const FullProduct = Product.discriminator("FullProduct", fullProductSchema);
 
-    static findMultipleById(ids) {
-        const db = getDb();
-        return db
-            .collection("products")
-            .find({
-                _id: {
-                    $in: ids,
-                },
-            }).toArray()
-            .then((products) => {
-                console.log("findMultipleById " + products);
-                return products;
-            })
-            .catch((err) => {
-                console.log("at findMultipleById " + err);
-            });
-    }
-
-    static DeleteById(pId) {
-        //return db.execute("DELETE FROM products where products.id = ?", [pId]);
-        const db = getDb();
-        return db
-            .collection("products")
-            .deleteOne({ _id: new ObjectId(pId) })
-            .then((product) => {
-                console.log("DeleteById product: " + product);
-            })
-            .catch((err) => {
-                console.log("at DeleteById " + err);
-            });
-    }
-};
+module.exports = { Product, FullProduct };
