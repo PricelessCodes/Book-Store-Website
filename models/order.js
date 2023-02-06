@@ -1,36 +1,26 @@
-const { getDb, ObjectId } = require("../util/mongodb");
+const mongoose = require("mongoose");
 
-module.exports = class Order {
-    constructor(id, userId, products) {
-        this._id = new ObjectId(id);
-        this.userId = userId;
-        this.products = products;
-    }
+const Schema = mongoose.Schema;
+//Schema used to define how ur data look like
+const orderSchema = new Schema({
+    userId: {
+        type: mongoose.Types.ObjectId,
+        required: true,
+    },
+    products: {
+        type: [
+            {
+                product: {
+                    type: mongoose.Types.ObjectId,
+                    ref: "Product",
+                    required: true,
+                },
+                quantity: { type: Number, required: true },
+            },
+        ],
+        _id: false,
+        required: true,
+    },
+});
 
-    save() {
-        const db = getDb();
-        return db
-            .collection("orders")
-            .insertOne(this)
-            .then((order) => {
-                console.log(order + " order is checked out in db");
-            })
-            .catch((err) => {
-                console.log(err);
-            });
-    }
-
-    static findOrdersByUserId(uId) {
-        const db = getDb();
-        return db
-            .collection("orders")
-            .find({userId: uId}).toArray()
-            .then((orders) => {
-                console.log("User Orders");
-                return orders;
-            })
-            .catch((err) => {
-                console.log(err);
-            });
-    }
-}
+module.exports = mongoose.model("Order", orderSchema);

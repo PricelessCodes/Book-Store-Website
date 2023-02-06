@@ -1,7 +1,7 @@
-const Product = require("../models/product");
+const { Product, FullProduct } = require("../models/product");
 
 exports.getAddProduct = (req, res, next) => {
-    res.status(201).render("admin/edit-product", {
+    res.status(202).render("admin/edit-product", {
         pageTitle: "Add Product",
         path: "/admin/add-product",
         editMode: false,
@@ -9,46 +9,53 @@ exports.getAddProduct = (req, res, next) => {
 };
 
 exports.postAddProduct = (req, res, next) => {
-    console.log(req.params + " pramas");
     const title = req.body.title;
     const imageUrl = req.body.imageUrl;
     const price = req.body.price;
     const description = req.body.description;
-    const product = new Product(null, title, imageUrl, description, price, req.user._id);
-    //console.log(product);
+    const quantity = 5;
+    const userId = req.user._id;
+    const product = new FullProduct({
+        title: title,
+        price: price,
+        imageUrl: imageUrl,
+        description: description,
+        quantity: quantity,
+        userId: userId,
+    });
     product
         .save()
         .then((result) => {
-            console.log(result + "in post");
-            res.redirect("/");
+            console.log("New product is added");
+            res.status(201).redirect("/admin/products");
         })
         .catch((err) => {
             console.log(err);
+            res.status(400).redirect("/admin/products");
         });
 };
 
 exports.getEditProduct = (req, res, next) => {
     const editMode = req.query.editMode;
-    console.log(editMode);
-    if (editMode !== "true") return res.status(400).redirect("/");
-
     const prodId = req.params.productId;
-    Product.findById(prodId).then((result) => {
-        let product = result;
-        if (!product) {
-            throw new Error();
-        }
-        //console.log(product);
-        res.status(201).render("admin/edit-product", {
-            pageTitle: "Edit Product",
-            path: "/admin/edit-product",
-            editMode: true,
-            product: product,
+
+    if (editMode !== "true" || !prodId) return res.status(400).redirect("/admin/products");
+
+    Product.findById(prodId)
+        .then((product) => {
+            if (!product) throw new Error();
+
+            res.status(202).render("admin/edit-product", {
+                pageTitle: "Edit Product",
+                path: "/admin/edit-product",
+                editMode: true,
+                product: product,
+            });
+        })
+        .catch((err) => {
+            console.log(err);
+            res.status(202).redirect("/admin/products");
         });
-    })
-    .catch((err) => {
-        console.log(err);
-    });
 };
 
 exports.postEditProduct = (req, res, next) => {
@@ -57,39 +64,53 @@ exports.postEditProduct = (req, res, next) => {
     const imageUrl = req.body.imageUrl;
     const price = req.body.price;
     const description = req.body.description;
-    const product = new Product(id, title, imageUrl, description, price);
+    const quantity = 5;
+    const userId = req.user._id;
 
-    product.Update().then((result) => {
-        console.log("postEditProduct, update : " + result);
-        res.status(201).redirect("/");
-    })
-    .catch((err) => {
-        console.log(err);
-    });
-    
+    FullProduct.findById(id)
+        .then((product) => {
+            product.title = title;
+            product.price = price;
+            product.imageUrl = imageUrl;
+            product.description = description;
+            product.quantity = quantity;
+            product.userId = userId;
+            return product.save();
+        })
+        .then((result) => {
+            console.log("Product is updated");
+            res.status(201).redirect("/admin/products");
+        })
+        .catch((err) => {
+            console.log(err);
+            res.status(400).redirect("/admin/products");
+        });
 };
 
 exports.postDeleteProduct = (req, res, next) => {
     const id = req.params.productId;
 
-    Product.DeleteById(id).then(() => {
-        console.log("product is deleted");
-        res.status(201).redirect("/");
-    })
-    .catch((err) => {
-        console.log(err);
-    });
-    
+    if (!id) return res.status(400).redirect("/admin/products");
+
+    FullProduct.findByIdAndDelete(id)
+        .then(() => {
+            console.log("product is deleted");
+            res.status(201).redirect("/admin/products");
+        })
+        .catch((err) => {
+            console.log(err);
+            res.status(400).redirect("/admin/products");
+        });
 };
 
 exports.getProducts = (req, res, next) => {
     //we use path join because each operating system has its own path structure linux (/home/folder) and windows (\home\folder)
     //res.sendFile(path.join(rootDir, "views", "shop.html"));
-    Product.fetchAll()
+    FullProduct.find()
         .then((result) => {
             const products = result;
             //it will use the default templeting engine (ejs) and render it
-            res.render("admin/products", {
+            res.status(201).render("admin/products", {
                 prods: products,
                 pageTitle: "Admin Products",
                 path: "/admin/products",
@@ -97,5 +118,6 @@ exports.getProducts = (req, res, next) => {
         })
         .catch((err) => {
             console.log(err);
+            res.status(400).render("/");
         });
 };
