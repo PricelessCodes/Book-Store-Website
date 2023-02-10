@@ -14,6 +14,7 @@ exports.getProducts = (req, res, next) => {
         })
         .catch((err) => {
             console.log(err);
+            res.status(400).redirect("/");
         });
 };
 
@@ -34,7 +35,7 @@ exports.getProduct = (req, res, next) => {
         })
         .catch((err) => {
             console.log(err);
-            res.status(400).render("/");
+            res.status(400).redirect("/");
         });
 };
 
@@ -51,7 +52,7 @@ exports.getIndex = (req, res, next) => {
         })
         .catch((err) => {
             console.log(err);
-            res.status(400).render("/");
+            res.status(400).redirect("/");
         });
 };
 
@@ -70,14 +71,14 @@ exports.getCart = (req, res, next) => {
         })
         .catch((err) => {
             console.log(err);
-            res.status(400).render("/");
+            res.status(400).redirect("/");
         });
 };
 
 exports.postCart = (req, res, next) => {
     const prodId = req.params.productId;
 
-    if (!prodId) return res.status(400).render("/");
+    if (!prodId) return res.status(400).redirect("/");
 
     Cart.findById(req.user.cartId)
         .then((cart) => {
@@ -91,7 +92,9 @@ exports.postCart = (req, res, next) => {
                 if (index !== -1) cart.products[index].quantity++;
                 else cart.products.push({ product: prodId, quantity: 1 });
 
-                cart.save().catch((err) => {
+                cart.save().then((err) => {
+                    res.status(201).redirect("/cart");
+                }).catch((err) => {
                     throw err;
                 });
             } else {
@@ -100,7 +103,7 @@ exports.postCart = (req, res, next) => {
         })
         .catch((err) => {
             console.log(err);
-            res.status(400).render("/");
+            res.status(400).redirect("/");
         });
 };
 
@@ -162,6 +165,6 @@ exports.PostCheckout = (req, res, next) => {
         })
         .catch((err) => {
             console.log(err);
-            res.status(400).render("/");
+            res.status(400).redirect("/");
         });
 };
