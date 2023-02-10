@@ -13,7 +13,7 @@ exports.postAddProduct = (req, res, next) => {
     const imageUrl = req.body.imageUrl;
     const price = req.body.price;
     const description = req.body.description;
-    const quantity = 5;
+    const quantity = req.body.quantity;
     const userId = req.user._id;
     const product = new FullProduct({
         title: title,
@@ -39,7 +39,8 @@ exports.getEditProduct = (req, res, next) => {
     const editMode = req.query.editMode;
     const prodId = req.params.productId;
 
-    if (editMode !== "true" || !prodId) return res.status(400).redirect("/admin/products");
+    if (editMode !== "true" || !prodId)
+        return res.status(400).redirect("/admin/products");
 
     Product.findById(prodId)
         .then((product) => {
@@ -64,7 +65,7 @@ exports.postEditProduct = (req, res, next) => {
     const imageUrl = req.body.imageUrl;
     const price = req.body.price;
     const description = req.body.description;
-    const quantity = 5;
+    const quantity = req.body.quantity;
     const userId = req.user._id;
 
     FullProduct.findById(id)
@@ -118,6 +119,6 @@ exports.getProducts = (req, res, next) => {
         })
         .catch((err) => {
             console.log(err);
-            res.status(400).render("/");
+            res.status(400).redirect("/");
         });
 };

@@ -21,6 +21,10 @@
                 <input type="number" name="price" id="price" step="0.01" value=<% if (editMode) { %> "<%= product.price%>" <% } else { %> "" <% } %>>
             </div>
             <div class="form-control">
+                <label for="quantity">Quantity</label>
+                <input type="number" name="quantity" id="quantity" min="0" step="1" value=<% if (editMode) { %> "<%= product.price%>" <% } else { %> "" <% } %>>
+            </div>
+            <div class="form-control">
                 <label for="description">Description</label>
                 <textarea name="description" id="description" rows="5"><% if (editMode) { %><%= product.description%><% } else { %><% } %></textarea>
             </div>
